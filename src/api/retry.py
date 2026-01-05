@@ -1,5 +1,6 @@
 """Retry logic for API calls"""
 
+import re
 import time
 import threading
 from typing import Callable, TypeVar, Optional
@@ -17,6 +18,54 @@ from src.utils.logging import get_logger
 logger = get_logger(__name__)
 
 T = TypeVar("T")
+
+
+def parse_rate_limit_wait_time(error_message: str) -> Optional[float]:
+    """
+    Parse the wait time from a rate limit error message.
+
+    Supports formats like:
+    - "Please try again in 1m6s"
+    - "Please try again in 30s"
+    - "Please try again in 2m"
+
+    Args:
+        error_message: The error message string
+
+    Returns:
+        Wait time in seconds, or None if not found
+    """
+    # Pattern to match "try again in Xm Ys" or "try again in Xs" or "try again in Xm"
+    pattern = r"try again in (?:(\d+)m)?(?:(\d+(?:\.\d+)?)s)?"
+    match = re.search(pattern, error_message, re.IGNORECASE)
+
+    if not match:
+        return None
+
+    minutes = int(match.group(1)) if match.group(1) else 0
+    seconds = float(match.group(2)) if match.group(2) else 0
+
+    total_seconds = minutes * 60 + seconds
+
+    # Return None if no time was actually parsed
+    if total_seconds == 0:
+        return None
+
+    return total_seconds
+
+
+def is_rate_limit_error(error: Exception) -> bool:
+    """
+    Check if an error is a rate limit error.
+
+    Args:
+        error: The exception to check
+
+    Returns:
+        True if this is a rate limit error
+    """
+    error_msg = str(error).lower()
+    return "429" in error_msg or "rate limit" in error_msg or "rate_limit" in error_msg
 
 
 class RetryableError(Exception):
@@ -104,15 +153,21 @@ def retry_with_backoff(
     """
     last_error: Optional[Exception] = None
 
+    pending_wait_time: Optional[float] = None
+
     for attempt in range(max_retries):
         try:
             if attempt > 0:
-                # Calculate exponential backoff
-                wait_time = min(
-                    RETRY_BACKOFF_BASE * (2 ** (attempt - 1)), MAX_RETRY_WAIT
-                )
+                # Use pending wait time from rate limit error, or calculate exponential backoff
+                if pending_wait_time is not None:
+                    wait_time = pending_wait_time
+                    pending_wait_time = None
+                else:
+                    wait_time = min(
+                        RETRY_BACKOFF_BASE * (2 ** (attempt - 1)), MAX_RETRY_WAIT
+                    )
                 logger.info(
-                    f"Retry {attempt}/{max_retries}: waiting {wait_time} seconds"
+                    f"Retry {attempt}/{max_retries}: waiting {wait_time:.1f} seconds"
                 )
                 time.sleep(wait_time)
 
@@ -133,6 +188,17 @@ def retry_with_backoff(
 
             if is_retryable_error(e):
                 logger.warning(f"Retryable error on attempt {attempt + 1}: {e}")
+
+                # Check if this is a rate limit error and extract wait time
+                if is_rate_limit_error(e):
+                    parsed_wait = parse_rate_limit_wait_time(str(e))
+                    if parsed_wait is not None:
+                        # Add a small buffer to the wait time
+                        pending_wait_time = parsed_wait + 5
+                        logger.info(
+                            f"Rate limit detected, will wait {pending_wait_time:.1f}s before next retry"
+                        )
+
                 if on_retry and attempt < max_retries - 1:
                     on_retry(attempt + 1, e)
                 continue

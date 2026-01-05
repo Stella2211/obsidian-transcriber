@@ -50,14 +50,7 @@ class AudioFileHandler(FileSystemEventHandler):
         # Check if it's an audio file
         if is_audio_file(path):
             logger.info(f"Audio file detected: {path}")
-
-            # Run on_audio_detected hook
-            if self.hooks_runner:
-                result = self.hooks_runner.on_audio_detected(path)
-                if self.hooks_runner.should_abort(result):
-                    logger.warning(f"Aborting processing due to hook failure: {path}")
-                    return
-
+            # Note: on_audio_detected hook is called in handler after progress note is created
             # Process the audio file
             self.process_callback(path)
 
@@ -127,15 +120,7 @@ class VaultWatcher:
 
         for audio_path in audio_files:
             try:
-                # Run on_audio_detected hook
-                if self.hooks_runner:
-                    result = self.hooks_runner.on_audio_detected(audio_path)
-                    if self.hooks_runner.should_abort(result):
-                        logger.warning(
-                            f"Skipping file due to hook failure: {audio_path}"
-                        )
-                        continue
-
+                # Note: on_audio_detected hook is called in handler after progress note is created
                 self.process_callback(audio_path)
             except Exception as e:
                 logger.error(f"Failed to process {audio_path}: {e}")

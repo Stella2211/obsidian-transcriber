@@ -128,6 +128,17 @@ class ObsidianTranscriptionHandler:
         )
 
         try:
+            # Run on_audio_detected hook (before any other processing)
+            result = hooks_runner.on_audio_detected(audio_path)
+            if hooks_runner.should_abort(result):
+                logger.warning("Aborting due to on_audio_detected hook failure")
+                self.note_generator.update_progress_note(
+                    audio_path,
+                    "フックエラーで中断",
+                    details="on_audio_detected フックが失敗しました",
+                )
+                return False
+
             # Check if already processed
             if self.database.is_processed(audio_path):
                 logger.info(f"File already processed: {audio_path}")
