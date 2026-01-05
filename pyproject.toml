@@ -1,0 +1,133 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "obsidian-gemini-transcriber"
+version = "1.0.0"
+description = "Automatic speech-to-text transcription for Obsidian using Google Gemini API"
+readme = "README.md"
+requires-python = ">=3.13"
+license = { text = "MIT" }
+authors = [{ name = "stella", email = "stella@starry-night.dev" }]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Topic :: Text Processing :: Linguistic",
+]
+
+dependencies = [
+    "google-genai>=1.56.0",
+    "python-dotenv>=1.2.1",
+    "pydub>=0.25.1",
+    "soundfile>=0.13.1",
+    "audioop-lts>=0.2.2",
+    "groq>=1.0.0",
+    "watchdog>=6.0.0",
+    "pyyaml>=6.0.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
+    "pytest-mock>=3.15.1",
+    "black>=25.12.0",
+    "mypy>=1.19.1",
+    "pylint>=4.0.4",
+    "flake8>=7.3.0",
+    "types-requests>=2.32.4.20250913",
+    "types-python-dateutil>=2.9.0.20251115",
+]
+
+[project.scripts]
+obsidian-gemini-transcriber = "main:main"
+gemini-transcribe = "transcribe_cli:main"
+
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312', 'py313']
+include = '\.pyi?$'
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+follow_imports = "silent"
+ignore_missing_imports = true
+
+[tool.pylint]
+max-line-length = 100
+disable = [
+    "C0103", # Invalid name
+    "C0114", # Missing module docstring
+    "C0115", # Missing class docstring
+    "C0116", # Missing function docstring
+    "R0903", # Too few public methods
+    "R0913", # Too many arguments
+    "W0212", # Protected access
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--verbose",
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/tests/*", "*/__pycache__/*"]
+
+[dependency-groups]
+# UV-specific configuration
+dev = [
+    "pytest>=8.4.2",
+    "pytest-cov>=7.0.0",
+    "pytest-mock>=3.15.1",
+    "black>=25.9.0",
+    "mypy>=1.18.2",
+    "pylint>=3.3.8",
+    "flake8>=7.3.0",
+    "types-requests",
+    "types-python-dateutil",
+    "ruff>=0.13.1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]

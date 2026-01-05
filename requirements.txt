@@ -1,0 +1,17 @@
+# Core dependencies
+google-genai>=1.38.0
+python-dotenv>=1.1.1
+
+# Audio processing
+pydub>=0.25.1
+soundfile>=0.13.1
+numpy>=2.3.3
+audioop-lts  # For Python 3.13+ support
+
+# Voice Activity Detection (VAD)
+silero-vad>=6.0
+torch>=2.8.0
+torchaudio>=2.8.0
+
+# File watching
+watchdog>=6.0.0

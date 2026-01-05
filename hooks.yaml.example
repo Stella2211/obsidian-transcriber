@@ -1,0 +1,81 @@
+# Hooks Configuration for Obsidian Transcriber
+# Copy this file to hooks.yaml and customize as needed
+#
+# Available placeholders:
+#   {file_path}         - Path to detected file (on_file_detected)
+#   {audio_path}        - Path to audio file (all hooks)
+#   {transcription_path} - Path to transcription file (on_transcription_complete, on_summary_complete)
+#   {summary_path}      - Path to summary file (on_summary_complete)
+#
+# Options for each hook:
+#   command          - Command to execute (required)
+#   enabled          - Whether the hook is enabled (default: true)
+#   timeout_seconds  - Maximum execution time (default: 300)
+#   error_action     - Action on failure: "continue" or "abort" (default: continue)
+#   run_async        - Run in background (default: false)
+
+settings:
+  # Master switch to enable/disable all hooks
+  enabled: true
+
+hooks:
+  # Hook 1: Called when any file is detected (before audio check)
+  # Use case: Convert unsupported formats, pre-process files
+  on_file_detected:
+    command: "echo 'File detected: {file_path}'"
+    enabled: false
+    timeout_seconds: 300
+    error_action: continue
+    run_async: false
+
+  # Hook 2: Called when an audio file is detected
+  # Use case: Convert audio format, normalize audio, create backup
+  on_audio_detected:
+    command: "echo 'Audio file detected: {audio_path}'"
+    enabled: false
+    timeout_seconds: 300
+    error_action: continue
+    run_async: false
+
+  # Hook 3: Called after transcription is complete
+  # Use case: Custom summarization, send notification, trigger other processes
+  on_transcription_complete:
+    command: "echo 'Transcription complete: {transcription_path}'"
+    enabled: false
+    timeout_seconds: 300
+    error_action: continue
+    run_async: false
+
+  # Hook 4: Called after summary is complete
+  # Use case: Send notification, sync to cloud, post-process
+  on_summary_complete:
+    command: "echo 'Summary complete: {summary_path}'"
+    enabled: false
+    timeout_seconds: 300
+    error_action: continue
+    run_async: false
+
+# Example use cases:
+#
+# 1. Convert m4a to mp3 before processing:
+#    on_audio_detected:
+#      command: "ffmpeg -i {audio_path} -y {audio_path}.mp3"
+#      enabled: true
+#
+# 2. Send macOS notification when done:
+#    on_summary_complete:
+#      command: "osascript -e 'display notification \"処理完了: {audio_path}\" with title \"Obsidian Transcriber\"'"
+#      enabled: true
+#      run_async: true
+#
+# 3. Use custom summarization tool:
+#    on_transcription_complete:
+#      command: "/path/to/custom_summarizer.sh {audio_path} {transcription_path}"
+#      enabled: true
+#      error_action: abort
+#
+# 4. Sync to cloud storage:
+#    on_summary_complete:
+#      command: "rclone copy {summary_path} remote:backup/"
+#      enabled: true
+#      run_async: true
