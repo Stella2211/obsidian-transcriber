@@ -4,7 +4,7 @@ import subprocess
 import threading
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Any, Callable, Optional, Union
 
 from src.hooks.config import HooksConfig, HookDefinition, HookType, ErrorAction
 from src.utils.logging import get_logger
@@ -54,7 +54,7 @@ class HooksRunner:
         self.progress_callback = progress_callback
         self._async_threads: list[threading.Thread] = []
 
-    def _substitute_placeholders(self, command: str, **kwargs) -> str:
+    def _substitute_placeholders(self, command: str, **kwargs: Any) -> str:
         """
         Substitute placeholders in command with actual values
 
@@ -151,10 +151,12 @@ class HooksRunner:
     ) -> None:
         """Run hook asynchronously in a background thread"""
 
-        def _async_execute():
+        def _async_execute() -> None:
             result = self._execute_command(hook_type, hook, command)
             if not result.success:
-                logger.warning(f"Async hook '{hook_type.value}' failed: {result.error_message}")
+                logger.warning(
+                    f"Async hook '{hook_type.value}' failed: {result.error_message}"
+                )
 
         thread = threading.Thread(target=_async_execute, daemon=True)
         thread.start()
@@ -165,7 +167,7 @@ class HooksRunner:
         self,
         hook_type: HookType,
         update_progress: bool = True,
-        **kwargs,
+        **kwargs: Any,
     ) -> Optional[HookResult]:
         """
         Run a hook if it's enabled
@@ -189,7 +191,9 @@ class HooksRunner:
         if update_progress and self.progress_callback:
             self.progress_callback(
                 f"フック実行中: {hook_type.value}",
-                f"コマンド: {command[:50]}..." if len(command) > 50 else f"コマンド: {command}",
+                f"コマンド: {command[:50]}..."
+                if len(command) > 50
+                else f"コマンド: {command}",
             )
 
         # Execute async or sync

@@ -7,7 +7,10 @@ from src.api.groq_client import GroqClient
 from src.api.client import GeminiClient
 from src.audio.chunking import AudioChunker
 from src.audio.utils import get_audio_duration
-from src.constants import MAX_TRANSCRIPTION_PREVIEW_LENGTH, DEFAULT_CHUNK_OVERLAP_SECONDS
+from src.constants import (
+    MAX_TRANSCRIPTION_PREVIEW_LENGTH,
+    DEFAULT_CHUNK_OVERLAP_SECONDS,
+)
 from src.utils.logging import get_logger
 from src.utils.text import merge_all_segments
 
@@ -65,7 +68,9 @@ class TranscriptionService:
 
             if self.chunker.needs_chunking(audio_path):
                 file_size_mb = self.chunker.get_file_size_mb(audio_path)
-                logger.info(f"File size ({file_size_mb:.1f}MB) exceeds limit, chunking required")
+                logger.info(
+                    f"File size ({file_size_mb:.1f}MB) exceeds limit, chunking required"
+                )
                 return self._transcribe_with_chunking(audio_path, progress_callback)
             else:
                 if progress_callback:

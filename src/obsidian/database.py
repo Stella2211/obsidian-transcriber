@@ -137,7 +137,7 @@ class ProcessedFilesDatabase:
         try:
             current_hash = self.get_file_hash(file_path)
             stored_hash = file_entry.get("hash")
-            return current_hash == stored_hash
+            return bool(current_hash == stored_hash)
         except Exception as e:
             logger.warning(f"Failed to check file hash: {e}")
             return False
@@ -264,7 +264,9 @@ class ProcessedFilesDatabase:
         Returns:
             Dictionary with processed file info or None
         """
-        return self.data.get("files", {}).get(str(file_path))
+        files: Dict[str, Any] = self.data.get("files", {})
+        result: Optional[Dict[str, Any]] = files.get(str(file_path))
+        return result
 
     def remove_processed_file(self, file_path: Path) -> None:
         """
@@ -309,7 +311,8 @@ class ProcessedFilesDatabase:
         Returns:
             Dictionary with statistics
         """
-        return self.data.get("statistics", {})
+        result: Dict[str, Any] = self.data.get("statistics", {})
+        return result
 
     def get_all_files(
         self, status: Optional[ProcessingStatus] = None

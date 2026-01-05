@@ -61,7 +61,7 @@ def execute_with_timeout(func: Callable[[], T], timeout: int = DEFAULT_TIMEOUT) 
     result: list[Optional[T]] = [None]
     exception: list[Optional[Exception]] = [None]
 
-    def run_func():
+    def run_func() -> None:
         try:
             result[0] = func()
         except Exception as e:

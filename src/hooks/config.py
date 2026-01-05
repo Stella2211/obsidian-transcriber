@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast
 import yaml
 
 from src.utils.logging import get_logger
@@ -112,7 +112,7 @@ class HooksConfig:
         if not self.hooks_enabled:
             return None
 
-        hook = getattr(self, hook_type.value, None)
+        hook: Optional[HookDefinition] = getattr(self, hook_type.value, None)
         if hook and hook.enabled:
             return hook
         return None

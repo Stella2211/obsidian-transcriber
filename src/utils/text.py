@@ -6,7 +6,9 @@ from src.utils.logging import get_logger
 logger = get_logger(__name__)
 
 
-def find_overlap(text_a: str, text_b: str, min_overlap: int = 10, max_overlap: int = 200) -> Optional[str]:
+def find_overlap(
+    text_a: str, text_b: str, min_overlap: int = 10, max_overlap: int = 200
+) -> Optional[str]:
     """
     Find overlapping text between the end of text_a and the beginning of text_b.
 
@@ -84,7 +86,7 @@ def merge_segments_with_dedup(
 
     if overlap:
         # Remove the overlapping part from segment_b
-        merged = segment_a + segment_b[len(overlap):]
+        merged = segment_a + segment_b[len(overlap) :]
         logger.debug(f"Found overlap of {len(overlap)} chars: '{overlap[:50]}...'")
         return merged, True
     else:
@@ -135,7 +137,7 @@ def merge_all_segments(
         else:
             fail_count += 1
             logger.info(
-                f"Segment {i}/{len(segments)-1}: No overlap found, "
+                f"Segment {i}/{len(segments) - 1}: No overlap found, "
                 "both versions kept (possible kanji/hiragana difference)"
             )
 

@@ -48,7 +48,7 @@ class GeminiClient:
         # Use provided model or default to summary model
         use_model = model or self.summary_model
 
-        def generate():
+        def generate() -> str:
             contents = [prompt]
 
             response = self.client.models.generate_content(
@@ -56,7 +56,7 @@ class GeminiClient:
             )
             # Check if response has text attribute and it's not None
             if hasattr(response, "text") and response.text:
-                return response.text
+                return str(response.text)
             else:
                 # Treat None response as retryable error
                 logger.warning("API response has no text content, will retry")
@@ -64,7 +64,8 @@ class GeminiClient:
 
                 raise RetryableError("API returned empty response")
 
-        return retry_with_backoff(generate)
+        result: str = retry_with_backoff(generate)
+        return result
 
     def summarize_text(self, text: str, context: str = "") -> str:
         """

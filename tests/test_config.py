@@ -12,7 +12,10 @@ from src.config import Config
 class TestConfig(unittest.TestCase):
     """Test cases for Config class"""
 
-    @patch.dict(os.environ, {"GROQ_API_KEY": "test_groq_key", "GEMINI_API_KEY": "test_gemini_key"})
+    @patch.dict(
+        os.environ,
+        {"GROQ_API_KEY": "test_groq_key", "GEMINI_API_KEY": "test_gemini_key"},
+    )
     def test_from_env(self):
         """Test Config.from_env method"""
         config = Config.from_env()
@@ -38,7 +41,9 @@ class TestConfig(unittest.TestCase):
             Config.from_env()
         self.assertIn("Gemini API key not found", str(context.exception))
 
-    @patch.dict(os.environ, {"GROQ_API_KEY": "env_groq_key", "GEMINI_API_KEY": "env_gemini_key"})
+    @patch.dict(
+        os.environ, {"GROQ_API_KEY": "env_groq_key", "GEMINI_API_KEY": "env_gemini_key"}
+    )
     def test_from_args_with_env(self):
         """Test Config.from_args with environment variable"""
         args = Namespace(
@@ -87,7 +92,7 @@ class TestConfig(unittest.TestCase):
         config = Config(
             groq_api_key="test",
             gemini_api_key="test",
-            db_path=Path("/explicit/db.json")
+            db_path=Path("/explicit/db.json"),
         )
         self.assertEqual(config.get_db_path(), Path("/explicit/db.json"))
 
@@ -96,9 +101,7 @@ class TestConfig(unittest.TestCase):
         """Test get_db_path with .obsidian folder"""
         mock_exists.return_value = True
         config = Config(
-            groq_api_key="test",
-            gemini_api_key="test",
-            watch_folder=Path("/vault")
+            groq_api_key="test", gemini_api_key="test", watch_folder=Path("/vault")
         )
         expected = Path("/vault/.obsidian/.transcription_db.json")
         self.assertEqual(config.get_db_path(), expected)
@@ -108,9 +111,7 @@ class TestConfig(unittest.TestCase):
         """Test get_db_path without .obsidian folder"""
         mock_exists.return_value = False
         config = Config(
-            groq_api_key="test",
-            gemini_api_key="test",
-            watch_folder=Path("/vault")
+            groq_api_key="test", gemini_api_key="test", watch_folder=Path("/vault")
         )
         expected = Path("/vault/.transcription_db.json")
         self.assertEqual(config.get_db_path(), expected)

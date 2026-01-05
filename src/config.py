@@ -2,7 +2,7 @@
 
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Any
 from dataclasses import dataclass, field
 from dotenv import load_dotenv
 
@@ -45,7 +45,7 @@ class Config:
         return cls(groq_api_key=groq_api_key, gemini_api_key=gemini_api_key)
 
     @classmethod
-    def from_args(cls, args) -> "Config":
+    def from_args(cls, args: Any) -> "Config":
         """Create configuration from command line arguments"""
         # Load environment file if specified
         if (
@@ -107,12 +107,14 @@ class Config:
         ]
 
         if self.watch_folder:
-            default_paths.extend([
-                self.watch_folder / "hooks.yaml",
-                self.watch_folder / "hooks.yml",
-                self.watch_folder / ".obsidian" / "hooks.yaml",
-                self.watch_folder / ".obsidian" / "hooks.yml",
-            ])
+            default_paths.extend(
+                [
+                    self.watch_folder / "hooks.yaml",
+                    self.watch_folder / "hooks.yml",
+                    self.watch_folder / ".obsidian" / "hooks.yaml",
+                    self.watch_folder / ".obsidian" / "hooks.yml",
+                ]
+            )
 
         for path in default_paths:
             if path.exists():

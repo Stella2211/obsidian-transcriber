@@ -48,6 +48,7 @@ dev = [
     "flake8>=7.3.0",
     "types-requests>=2.32.4.20250913",
     "types-python-dateutil>=2.9.0.20251115",
+    "types-PyYAML>=6.0.0",
 ]
 
 [project.scripts]
@@ -60,7 +61,7 @@ target-version = ['py38', 'py39', 'py310', 'py311', 'py312', 'py313']
 include = '\.pyi?$'
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.13"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -114,6 +115,7 @@ dev = [
     "types-requests",
     "types-python-dateutil",
     "ruff>=0.13.1",
+    "types-pyyaml>=6.0.12.20250915",
 ]
 
 [tool.hatch.build.targets.wheel]

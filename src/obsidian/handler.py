@@ -1,7 +1,7 @@
 """Main handler for processing audio files in Obsidian"""
 
 from pathlib import Path
-from typing import Optional
+from typing import Any, Callable, Optional, Tuple
 
 from src.transcription.service import TranscriptionService
 from src.obsidian.database import ProcessedFilesDatabase
@@ -64,7 +64,9 @@ class ObsidianTranscriptionHandler:
         if hooks_config and hooks_config.has_enabled_hooks():
             logger.info("Hooks: enabled")
 
-    def _create_progress_callback(self, audio_path: Path):
+    def _create_progress_callback(
+        self, audio_path: Path
+    ) -> Callable[[str, Optional[Tuple[Any, ...]]], None]:
         """
         Create a progress callback function for updating progress notes
 
@@ -75,14 +77,18 @@ class ObsidianTranscriptionHandler:
             Callback function for progress updates
         """
 
-        def callback(status: str, segment_info: Optional[tuple] = None):
+        def callback(
+            status: str, segment_info: Optional[Tuple[Any, ...]] = None
+        ) -> None:
             self.note_generator.update_progress_note(
                 audio_path, status, segment_info=segment_info
             )
 
         return callback
 
-    def _create_hooks_progress_callback(self, audio_path: Path):
+    def _create_hooks_progress_callback(
+        self, audio_path: Path
+    ) -> Callable[[str, Optional[str]], None]:
         """
         Create a progress callback for hooks runner
 
@@ -93,8 +99,10 @@ class ObsidianTranscriptionHandler:
             Callback function for hooks progress updates
         """
 
-        def callback(status: str, details: Optional[str] = None):
-            self.note_generator.update_progress_note(audio_path, status, details=details)
+        def callback(status: str, details: Optional[str] = None) -> None:
+            self.note_generator.update_progress_note(
+                audio_path, status, details=details
+            )
 
         return callback
 

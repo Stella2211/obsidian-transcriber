@@ -3,7 +3,7 @@
 import os
 import tempfile
 from pathlib import Path
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Callable, Any
 
 from pydub import AudioSegment
 
@@ -47,7 +47,7 @@ class AudioChunker:
     def split_audio(
         self,
         audio_path: Path,
-        progress_callback: Optional[callable] = None,
+        progress_callback: Optional[Callable[[str, Any], None]] = None,
     ) -> List[Tuple[float, float, Path]]:
         """
         Split audio file into chunks if needed
@@ -62,7 +62,9 @@ class AudioChunker:
         file_size = os.path.getsize(audio_path)
 
         if file_size <= self.max_size_bytes:
-            logger.info(f"File {audio_path.name} is within size limit, no chunking needed")
+            logger.info(
+                f"File {audio_path.name} is within size limit, no chunking needed"
+            )
             return [(0, 0, audio_path)]
 
         logger.info(
@@ -84,7 +86,9 @@ class AudioChunker:
 
         # Account for overlap when calculating chunk duration
         # With overlap, we need slightly more chunks
-        effective_duration = duration_seconds + (self.overlap_seconds * (num_chunks - 1))
+        effective_duration = duration_seconds + (
+            self.overlap_seconds * (num_chunks - 1)
+        )
         chunk_duration_ms = int((effective_duration / num_chunks) * 1000)
 
         # Ensure minimum chunk duration (at least 30 seconds)
@@ -136,13 +140,12 @@ class AudioChunker:
                 break
 
         logger.info(
-            f"Split audio into {len(chunks)} chunks "
-            f"(overlap: {self.overlap_seconds}s)"
+            f"Split audio into {len(chunks)} chunks (overlap: {self.overlap_seconds}s)"
         )
 
         return chunks
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         """Remove all temporary chunk files"""
         for temp_file in self._temp_files:
             try:
@@ -153,6 +156,6 @@ class AudioChunker:
                 logger.warning(f"Failed to clean up {temp_file}: {e}")
         self._temp_files.clear()
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Cleanup on object destruction"""
         self.cleanup()

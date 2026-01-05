@@ -35,14 +35,14 @@ def get_audio_duration(audio_path: Path) -> float:
     """
     try:
         info = sf.info(str(audio_path))
-        duration = info.duration
+        duration: float = float(info.duration)
         logger.debug(f"Audio duration for {audio_path}: {duration:.2f} seconds")
         return duration
     except Exception as e:
         logger.warning(f"Failed to get duration with soundfile: {e}, trying pydub")
         try:
             audio = AudioSegment.from_file(str(audio_path))
-            duration = audio.duration_seconds
+            duration = float(audio.duration_seconds)
             logger.debug(f"Audio duration for {audio_path}: {duration:.2f} seconds")
             return duration
         except Exception as e:

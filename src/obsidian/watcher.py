@@ -2,7 +2,7 @@
 
 import time
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Any, Callable, List, Optional
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, FileSystemEvent
 
@@ -64,7 +64,12 @@ class AudioFileHandler(FileSystemEventHandler):
     def on_created(self, event: FileSystemEvent) -> None:
         """Handle file creation event"""
         if not event.is_directory:
-            path = Path(event.src_path)
+            src_path = (
+                event.src_path
+                if isinstance(event.src_path, str)
+                else event.src_path.decode()
+            )
+            path = Path(src_path)
             logger.debug(f"File created: {path}")
             # Wait a bit to ensure file is fully written
             time.sleep(2)
@@ -73,7 +78,12 @@ class AudioFileHandler(FileSystemEventHandler):
     def on_modified(self, event: FileSystemEvent) -> None:
         """Handle file modification event"""
         if not event.is_directory:
-            path = Path(event.src_path)
+            src_path = (
+                event.src_path
+                if isinstance(event.src_path, str)
+                else event.src_path.decode()
+            )
+            path = Path(src_path)
             if is_audio_file(path):
                 logger.debug(f"Audio file modified: {path}")
                 # Wait a bit to ensure file is fully written
@@ -101,14 +111,14 @@ class VaultWatcher:
         self.vault_path = vault_path
         self.process_callback = process_callback
         self.hooks_runner = hooks_runner
-        self.observer: Optional[Observer] = None
+        self.observer: Optional[Any] = None
         logger.info(f"Initialized vault watcher for: {vault_path}")
 
     def scan_existing_files(self) -> None:
         """Scan and process existing audio files in the vault"""
         logger.info(f"Scanning existing audio files in: {self.vault_path}")
 
-        audio_files = []
+        audio_files: List[Path] = []
         for ext in AUDIO_EXTENSIONS:
             pattern = f"*{ext}"
             audio_files.extend(self.vault_path.rglob(pattern))

@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Optional
 
-from groq import Groq
+from groq import Groq, omit
 
 from src.api.retry import retry_with_backoff, RetryableError
 from src.constants import (
@@ -57,7 +57,7 @@ class GroqClient:
                     file=audio_file,
                     model=self.model,
                     language=language,
-                    prompt=prompt,
+                    prompt=prompt if prompt is not None else omit,
                     response_format="text",
                     temperature=0.0,
                 )

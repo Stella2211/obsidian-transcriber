@@ -90,7 +90,7 @@ class TestMergeAllSegments(unittest.TestCase):
         segments = [
             "これは最初のセグメントです。次に続く",
             "次に続くのは二番目です。最後に",
-            "最後に三番目のセグメントです。"
+            "最後に三番目のセグメントです。",
         ]
         merged, success, fail = merge_all_segments(segments, min_overlap=3)
         self.assertEqual(success, 2)
@@ -117,7 +117,7 @@ class TestMergeAllSegments(unittest.TestCase):
         segments = [
             "セグメントA。重複部分",
             "重複部分はここ。",  # Has overlap
-            "全く別のテキスト。"  # No overlap
+            "全く別のテキスト。",  # No overlap
         ]
         merged, success, fail = merge_all_segments(segments, min_overlap=3)
         self.assertEqual(success, 1)
