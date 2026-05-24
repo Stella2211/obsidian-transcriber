@@ -10,6 +10,7 @@ from src.audio.utils import get_audio_duration
 from src.constants import (
     MAX_TRANSCRIPTION_PREVIEW_LENGTH,
     DEFAULT_CHUNK_OVERLAP_SECONDS,
+    DEFAULT_TRANSCRIPTION_LANGUAGE,
 )
 from src.utils.logging import get_logger
 from src.utils.text import merge_all_segments
@@ -25,6 +26,7 @@ class TranscriptionService:
         groq_api_key: str,
         gemini_api_key: str,
         chunk_overlap_seconds: int = DEFAULT_CHUNK_OVERLAP_SECONDS,
+        language: Optional[str] = DEFAULT_TRANSCRIPTION_LANGUAGE,
         verbose: bool = False,
     ):
         """
@@ -34,13 +36,18 @@ class TranscriptionService:
             groq_api_key: Groq API key for Whisper transcription
             gemini_api_key: Gemini API key for summarization
             chunk_overlap_seconds: Overlap between audio chunks (default: 10 seconds)
+            language: 文字起こし言語コード（例: "ja"）。None で自動判定
             verbose: Enable verbose logging
         """
         self.groq_client = GroqClient(groq_api_key)
         self.gemini_client = GeminiClient(gemini_api_key)
         self.chunker = AudioChunker(overlap_seconds=chunk_overlap_seconds)
+        self.language = language
         self.verbose = verbose
-        logger.info("Initialized transcription service (Groq Whisper + Gemini)")
+        logger.info(
+            "Initialized transcription service (Groq Whisper + Gemini), "
+            f"language={language or 'auto'}"
+        )
 
     def transcribe_file(
         self,
@@ -92,7 +99,7 @@ class TranscriptionService:
             Transcribed text
         """
         logger.info("Transcribing audio directly (no chunking)")
-        return self.groq_client.transcribe_audio(audio_path)
+        return self.groq_client.transcribe_audio(audio_path, language=self.language)
 
     def _transcribe_with_chunking(
         self,
@@ -136,10 +143,12 @@ class TranscriptionService:
                 try:
                     # Check if this is the original file (no chunking needed for single chunk)
                     if chunk_path == audio_path:
-                        chunk_text = self.groq_client.transcribe_audio(chunk_path)
+                        chunk_text = self.groq_client.transcribe_audio(
+                            chunk_path, language=self.language
+                        )
                     else:
                         chunk_text = self.groq_client.transcribe_audio_segment(
-                            chunk_path, start, end
+                            chunk_path, start, end, language=self.language
                         )
                     transcriptions.append(chunk_text)
                 except Exception as e:

@@ -32,7 +32,7 @@ class GroqClient:
     def transcribe_audio(
         self,
         audio_path: Path,
-        language: str = "ja",
+        language: Optional[str] = None,
         prompt: Optional[str] = None,
     ) -> str:
         """
@@ -40,7 +40,7 @@ class GroqClient:
 
         Args:
             audio_path: Path to the audio file
-            language: Language code (default: Japanese)
+            language: Language code (e.g. "ja"). None で Whisper が自動判定
             prompt: Optional context prompt for better accuracy
 
         Returns:
@@ -56,7 +56,7 @@ class GroqClient:
                 transcription = self.client.audio.transcriptions.create(
                     file=audio_file,
                     model=self.model,
-                    language=language,
+                    language=language if language is not None else omit,
                     prompt=prompt if prompt is not None else omit,
                     response_format="text",
                     temperature=0.0,
@@ -90,7 +90,7 @@ class GroqClient:
         audio_path: Path,
         start_seconds: float,
         end_seconds: float,
-        language: str = "ja",
+        language: Optional[str] = None,
     ) -> str:
         """
         Transcribe an audio segment with timing context

@@ -1,5 +1,6 @@
 """Audio chunking for files exceeding Groq's size limit"""
 
+import math
 import os
 import tempfile
 from pathlib import Path
@@ -7,7 +8,13 @@ from typing import List, Tuple, Optional, Callable, Any
 
 from pydub import AudioSegment
 
-from src.constants import MAX_CHUNK_SIZE_MB, DEFAULT_CHUNK_OVERLAP_SECONDS
+from src.constants import (
+    MAX_CHUNK_SIZE_MB,
+    DEFAULT_CHUNK_OVERLAP_SECONDS,
+    CHUNK_SAMPLE_RATE,
+    CHUNK_CHANNELS,
+    CHUNK_BITRATE_KBPS,
+)
 from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -75,23 +82,30 @@ class AudioChunker:
         if progress_callback:
             progress_callback("音声ファイルを分割中", None)
 
-        # Load audio
+        # Load audio and downsample to 16kHz mono. Groq downsamples to 16kHz
+        # mono internally, so this is lossless for transcription quality while
+        # making the exported chunk size predictable from the bitrate alone.
         audio = AudioSegment.from_file(audio_path)
+        audio = audio.set_frame_rate(CHUNK_SAMPLE_RATE).set_channels(CHUNK_CHANNELS)
         duration_seconds = len(audio) / 1000.0
 
-        # Calculate chunk duration based on file size ratio
-        # Estimate: if file is X times the limit, we need X chunks
-        size_ratio = file_size / self.max_size_bytes
-        num_chunks = int(size_ratio) + 1
+        # Derive the maximum safe chunk duration from the *output* bitrate, not
+        # the input file size. A low-bitrate source (e.g. 64kbps AAC) re-encodes
+        # to a larger file, so sizing chunks by the input ratio can produce
+        # chunks that exceed the API limit (HTTP 413). Computing from the export
+        # bitrate guarantees each chunk stays under MAX_CHUNK_SIZE_MB.
+        bytes_per_second = (CHUNK_BITRATE_KBPS * 1000) / 8
+        # 0.95 safety margin for MP3 container/header overhead and VBR variance.
+        max_chunk_seconds = (self.max_size_bytes / bytes_per_second) * 0.95
 
-        # Account for overlap when calculating chunk duration
-        # With overlap, we need slightly more chunks
+        # Distribute duration evenly across the minimum number of chunks needed,
+        # then cap at the safe maximum (and floor at 30s to avoid tiny chunks).
+        num_chunks = max(1, math.ceil(duration_seconds / max_chunk_seconds))
         effective_duration = duration_seconds + (
             self.overlap_seconds * (num_chunks - 1)
         )
         chunk_duration_ms = int((effective_duration / num_chunks) * 1000)
-
-        # Ensure minimum chunk duration (at least 30 seconds)
+        chunk_duration_ms = min(chunk_duration_ms, int(max_chunk_seconds * 1000))
         chunk_duration_ms = max(chunk_duration_ms, 30000)
 
         overlap_ms = self.overlap_seconds * 1000
@@ -113,16 +127,24 @@ class AudioChunker:
             chunk_path = Path(temp_file.name)
             temp_file.close()
 
-            # Export chunk as MP3 (good compression for Groq)
-            chunk.export(chunk_path, format="mp3", bitrate="128k")
+            # Export chunk as 16kHz mono MP3 at the configured bitrate.
+            chunk.export(chunk_path, format="mp3", bitrate=f"{CHUNK_BITRATE_KBPS}k")
             self._temp_files.append(chunk_path)
 
             start_seconds = start_ms / 1000.0
             end_seconds = end_ms / 1000.0
 
+            chunk_size_mb = os.path.getsize(chunk_path) / (1024 * 1024)
+            if chunk_size_mb > MAX_CHUNK_SIZE_MB:
+                logger.warning(
+                    f"Chunk {chunk_index} is {chunk_size_mb:.1f}MB, which exceeds "
+                    f"the {MAX_CHUNK_SIZE_MB}MB target; transcription may fail"
+                )
+
             chunks.append((start_seconds, end_seconds, chunk_path))
             logger.debug(
-                f"Created chunk {chunk_index}: {start_seconds:.1f}s - {end_seconds:.1f}s"
+                f"Created chunk {chunk_index}: {start_seconds:.1f}s - {end_seconds:.1f}s "
+                f"({chunk_size_mb:.1f}MB)"
             )
 
             chunk_index += 1

@@ -56,6 +56,13 @@ def main():
     )
 
     parser.add_argument(
+        "--language",
+        type=str,
+        default=None,
+        help="文字起こし言語コード（例: ja, en）。'auto' または未指定で自動判定",
+    )
+
+    parser.add_argument(
         "--hooks-config",
         type=str,
         default=None,
@@ -112,6 +119,7 @@ def main():
             groq_api_key=config.groq_api_key,
             gemini_api_key=config.gemini_api_key,
             chunk_overlap_seconds=config.chunk_overlap_seconds,
+            language=config.language,
             verbose=config.verbose,
         )
 

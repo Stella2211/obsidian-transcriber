@@ -19,6 +19,7 @@ class Config:
     verbose: bool = False
     scan_existing: bool = False
     chunk_overlap_seconds: int = 10
+    language: Optional[str] = None  # None = 言語を自動判定
     env_file: Path = Path(".env")
     hooks_config_path: Optional[Path] = None
 
@@ -90,6 +91,9 @@ class Config:
             config.scan_existing = args.scan_existing
         if hasattr(args, "chunk_overlap") and args.chunk_overlap is not None:
             config.chunk_overlap_seconds = args.chunk_overlap
+        if hasattr(args, "language") and args.language is not None:
+            # "auto" は自動判定として扱う
+            config.language = None if args.language == "auto" else args.language
         if hasattr(args, "hooks_config") and args.hooks_config:
             config.hooks_config_path = Path(args.hooks_config)
 

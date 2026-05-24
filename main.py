@@ -66,6 +66,13 @@ def main():
     )
 
     parser.add_argument(
+        "--language",
+        type=str,
+        default=None,
+        help="文字起こし言語コード（例: ja, en）。'auto' または未指定で自動判定",
+    )
+
+    parser.add_argument(
         "--hooks-config",
         type=str,
         default=None,
@@ -129,6 +136,7 @@ def main():
             db_path=db_path,
             create_summary=config.create_summary,
             chunk_overlap_seconds=config.chunk_overlap_seconds,
+            language=config.language,
             verbose=config.verbose,
             hooks_config=hooks_config,
         )
@@ -154,6 +162,7 @@ def main():
         print(f"  文字起こし: Groq Whisper (whisper-large-v3-turbo)")
         print(f"  要約生成: {'Gemini' if config.create_summary else '無効'}")
         print(f"  チャンクオーバーラップ: {config.chunk_overlap_seconds}秒")
+        print(f"  文字起こし言語: {config.language or '自動判定'}")
         if hooks_config.has_enabled_hooks():
             print(f"  フック: 有効 ({hooks_config_path})")
         print("  終了するには Ctrl+C を押してください\n")

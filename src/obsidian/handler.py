@@ -24,6 +24,7 @@ class ObsidianTranscriptionHandler:
         db_path: Path,
         create_summary: bool = True,
         chunk_overlap_seconds: int = 10,
+        language: Optional[str] = None,
         verbose: bool = False,
         hooks_config: Optional[HooksConfig] = None,
     ):
@@ -37,6 +38,7 @@ class ObsidianTranscriptionHandler:
             db_path: Path to the database file
             create_summary: Whether to create summaries
             chunk_overlap_seconds: Overlap between audio chunks
+            language: 文字起こし言語コード（例: "ja"）。None で自動判定
             verbose: Enable verbose logging
             hooks_config: Optional hooks configuration
         """
@@ -50,6 +52,7 @@ class ObsidianTranscriptionHandler:
             groq_api_key=groq_api_key,
             gemini_api_key=gemini_api_key,
             chunk_overlap_seconds=chunk_overlap_seconds,
+            language=language,
             verbose=verbose,
         )
         self.database = ProcessedFilesDatabase(db_path)
